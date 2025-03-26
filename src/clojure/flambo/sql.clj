@@ -16,14 +16,13 @@
                                      flat-map-groups-function]])
 
       (:import [org.apache.spark.api.java JavaSparkContext]
-           [org.apache.spark.sql.types StructType StructField DataType StringType]
-           [org.apache.spark.sql SparkSession SQLContext Row RowFactory Dataset Column KeyValueGroupedDataset]
-           [org.apache.spark.sql.catalyst.encoders RowEncoder]
-           [org.apache.spark.sql.catalyst.expressions GenericRowWithSchema]
-           [org.apache.spark.sql.hive HiveContext]
-           [org.apache.spark.sql.expressions Window]
-           [org.apache.spark.sql.types DataTypes]
-           [org.apache.spark.sql Encoder Encoders]))
+               [org.apache.spark.sql.types StructType StructField DataType StringType]
+               [org.apache.spark.sql SparkSession SQLContext Row RowFactory Dataset Column KeyValueGroupedDataset]
+               [org.apache.spark.sql.catalyst.expressions GenericRowWithSchema]
+               [org.apache.spark.sql.hive HiveContext]
+               [org.apache.spark.sql.expressions Window]
+               [org.apache.spark.sql.types DataTypes]
+               [org.apache.spark.sql SparkSession Encoder Encoders]))
 
 ;; ## SQLContext
 
@@ -73,8 +72,11 @@
   ([sql-context path source-type]       ; specify data source type
    (.load sql-context path source-type)))
 
-(defn create-custom-schema [array]
-  (-> (clojure.core/map #(DataTypes/createStructField (first %) (second %) (nth % 2))  array)
+(defn create-custom-schema
+  "Creates custom schema given clojure collection of
+  [[<field1> <DataType> <nullable?>] [<field2> <DataType> <nullable?>]]"
+  [array]
+  (-> (clojure.core/map #(DataTypes/createStructField (first %) (second %) (nth % 2)) array)
       DataTypes/createStructType))
 
 (defn read-csv
@@ -230,7 +232,7 @@ Clojure maps with each map created from its respective row."}
   ^{:doc "Coerce an Scala interator into a Clojure sequence"}
   iteratable-to-seq [i]
   (-> (.iterator i)
-      scala.collection.JavaConversions/asJavaIterator
+      scala.collection.JavaConverters/asJavaIterator
       iterator-seq))
 
 (defsparkfn
@@ -329,7 +331,7 @@ Clojure maps with each map created from its respective row."}
 (defn row-encoder
   "Return a row encoder with a `StructType` created with [[struct-type]]."
   [^StructType struct]
-  (RowEncoder/apply struct))
+  (Encoders/row struct))
 
 (defn create-row
   "Create a `org.apache.spark.sql SparkSession.Row` instance from a Clojure
@@ -368,10 +370,30 @@ See [[query]] for **opts** details."
        f/collect
        clojure.pprint/print-table))
 
+(defn show
+  "Shows the Dataset with options"
+  ([^Dataset df]
+   (show df false))
+  ([^Dataset df truncate?]
+   (.show df truncate?))
+  ([^Dataset df limit truncate?]
+   (.show df limit truncate?))
+  ([^Dataset df limit vertical? truncate?]
+   (.show df limit vertical? truncate?)))
 
-(def show (memfn show))
+(defn show-limit
+  "Shows the Dataset without truncating with limit"
+  [^Dataset df limit]
+  (show df limit false))
+
+(defn show-vertical
+  "Shows the Dataset without truncating with limit vertically"
+  [^Dataset df limit]
+  (show df limit 0 false))
 
 (def count (memfn count))
+
+(def collect (memfn collectAsList))
 
 (def create-global-temp-view (memfn createGlobalTempView))
 
@@ -401,11 +423,11 @@ See [[query]] for **opts** details."
   * :long
   * :string-tuple"
   [type-]
-  (cond (instance? java.lang.Class type-) (Encoders/javaSerialization type-)
+  (cond (instance? java.lang.Class type-) (Encoders/kryo type-)
         (instance? Encoder type-) type-
         (keyword? type-)
         (case type-
-          :object (Encoders/javaSerialization java.io.Serializable)
+          :object (Encoders/kryo java.io.Serializable)
           :string (Encoders/STRING)
           :boolean (Encoders/BOOLEAN)
           :byte (Encoders/BYTE)
@@ -418,6 +440,13 @@ See [[query]] for **opts** details."
           :string-tuple (Encoders/tuple (Encoders/STRING) (Encoders/STRING)))
         :else (throw (ex-info (format "Invalid encoder option: %s" type-)
                               {:type type-}))))
+
+(defn create-dataset
+  "Creates Dataset for local collections"
+  ([^SparkSession spss col]
+  (create-dataset spss :object col))
+  ([^SparkSession spss type- col]
+   (.createDataset spss col (encoder-for-type type-))))
 
 (defn ^Dataset map
   "Returns a new dataframe formed by passing each element of the source through

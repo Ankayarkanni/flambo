@@ -3,6 +3,10 @@
 ;; This is a partial and mostly untested implementation of
 ;; Spark Streaming; consider it a work in progress.
 ;;
+;; Deprecated.
+;; This is deprecated as of Spark 3.4.0.
+;; There are no longer updates to DStream and it's a legacy project.
+;; https://spark.apache.org/docs/3.5.1/api/java/org/apache/spark/streaming/StreamingContext.html
 (ns flambo.streaming
   (:refer-clojure :exclude [map time print union count])
   (:require [flambo.api :as f]
@@ -14,7 +18,7 @@
                                      void-function
                                      void-function2]])
   (:import [org.apache.spark.streaming.api.java JavaStreamingContext]
-           [org.apache.spark.streaming.kafka KafkaUtils]
+           [org.apache.spark.streaming.kafka010 KafkaUtils]
            [org.apache.spark.streaming Duration Time]))
 
 (defn duration [ms]
@@ -44,11 +48,8 @@
 (defn socket-text-stream [context ip port]
   (.socketTextStream context ip port))
 
-(defn kafka-stream [streaming-context zk-connect group-id topic-map]
-  (KafkaUtils/createStream streaming-context zk-connect group-id (into {} (for [[k v] topic-map] [k (Integer. v)]))))
-
-(defn kafka-direct-stream [streaming-context key-class value-class key-decoder-class value-decoder-class kafka-params topic-set]
-  (KafkaUtils/createDirectStream streaming-context key-class value-class key-decoder-class value-decoder-class kafka-params topic-set))
+(defn kafka-direct-stream [streaming-context location-strategies consumer-strategies]
+  (KafkaUtils/createDirectStream streaming-context location-strategies consumer-strategies))
 
 (defn flat-map [dstream f]
   (.flatMap dstream (flat-map-function f)))

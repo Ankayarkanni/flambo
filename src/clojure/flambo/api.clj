@@ -255,8 +255,8 @@
   "Union `rdd` and `other`, or multiple RDDs. Duplicate keys are kept."
   ([rdd other]
    (.union rdd other))
-  ([context rdd & rdds]
-   (.union context rdd (ArrayList. rdds))))
+  ([rdd other & rdds]
+   (clojure.core/reduce #(union %1 %2) (union rdd other) rdds)))
 
 (defn foreach
   "Applies the function `f` to all elements of `rdd`."

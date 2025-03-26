@@ -37,7 +37,7 @@
       (let [rdd1 (f/parallelize c [1 2 3 4])
             rdd2 (f/parallelize c [21 22 23])
             rdd3 (f/parallelize c [31 32 33])]
-        (-> (f/union c rdd1 rdd2 rdd3)
+        (-> (f/union rdd1 rdd2 rdd3)
             f/collect
             vec) => (just [1 2 3 4 21 22 23 31 32 33] :in-any-order))))))
 
@@ -276,7 +276,7 @@
                  rdd2 (f/parallelize c [5 6 7])
                  rdd3 (f/parallelize c [8 9 10 11])
                  rdd4 (f/parallelize c [12 13])]
-             (-> (f/union c rdd1 rdd2 rdd3 rdd4)
+             (-> (f/union rdd1 rdd2 rdd3 rdd4)
                  (f/repartition 4)
                  f/partition-count) => 4))
 

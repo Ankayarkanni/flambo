@@ -1,4 +1,4 @@
-(defproject yieldbot/flambo "0.8.3-SNAPSHOT"
+(defproject yieldbot/flambo "0.9.0-SNAPSHOT"
   :description "A Clojure DSL for Apache Spark"
   :url "https://github.com/yieldbot/flambo"
   :license {:name "Eclipse Public License"
@@ -6,19 +6,15 @@
   :mailing-list {:name "flambo user mailing list"
                  :archive "https://groups.google.com/d/forum/flambo-user"
                  :post "flambo-user@googlegroups.com"}
-  :dependencies [[org.clojure/clojure "1.8.0"]
-                 [org.clojure/tools.logging "0.3.1"]
-                 [com.google.guava/guava "18.0"]
-                 [yieldbot/serializable-fn "0.1.2"
-                  :exclusions [com.twitter/chill-java]]
-                 [com.twitter/carbonite "1.5.0"
-                  :exclusions [com.twitter/chill-java]]
-                 [com.twitter/chill_2.11 "0.8.0"
-                  :exclusions [org.scala-lang/scala-library]]]
+  :dependencies [[org.clojure/clojure "1.12.0"]
+                 [org.clojure/tools.logging "1.3.0"]
+                 [com.google.guava/guava "33.4.6-jre"]
+                 [yieldbot/serializable-fn "0.1.3"
+                  :exclusions [com.twitter/chill-java]]]
   :profiles {:dev
-             {:dependencies [[midje "1.6.3"]
+             {:dependencies [[midje "1.10.10"]
                              [criterium "0.4.3"]]
-              :plugins [[lein-midje "3.1.3"]
+              :plugins [[lein-midje "3.2.1"]
                         [michaelblume/lein-marginalia "0.9.0"]
                         ;; [codox "0.8.9"]
                         [funcool/codeina "0.3.0"
@@ -28,11 +24,39 @@
                     flambo.example.tfidf]}
              :provided
              {:dependencies
-              [[org.apache.spark/spark-core_2.11 "2.3.1"]
-               [org.apache.spark/spark-streaming_2.11 "2.3.1"]
-               [org.apache.spark/spark-streaming-kafka-0-10_2.11 "2.3.1"]
-               [org.apache.spark/spark-sql_2.11 "2.3.1"]
-               [org.apache.spark/spark-hive_2.11 "2.3.1"]]}
+              [[com.fasterxml.jackson.core/jackson-core "2.15.2"]
+               [org.slf4j/slf4j-api "2.0.7"]
+               [org.apache.spark/spark-core_2.12 "3.5.1"
+                :exclusions [[com.google.code.findbugs/jsr305]
+                             [com.google.code.gson/gson]
+                             [com.google.protobuf/protobuf-java]
+                             [com.fasterxml.jackson.core/jackson-core]
+                             [org.slf4j/slf4j-api]
+                             [commons-logging]]]
+               [org.apache.spark/spark-streaming_2.12 "3.5.1"
+                :exclusions [[com.google.code.findbugs/jsr305]
+                             [com.google.code.gson/gson]
+                             [com.google.protobuf/protobuf-java]
+                             [org.slf4j/slf4j-api]]]
+               [org.apache.spark/spark-streaming-kafka-0-10_2.12 "3.5.1"]
+               [org.apache.spark/spark-sql_2.12 "3.5.1"
+                :exclusions [[com.google.code.findbugs/jsr305]
+                             [com.google.code.gson/gson]
+                             [com.google.protobuf/protobuf-java]
+                             [org.apache.yetus/audience-annotations]
+                             [org.slf4j/slf4j-api]]]
+               [org.apache.spark/spark-hive_2.12 "3.5.1"
+                :exclusions [[com.google.code.findbugs/jsr305]
+                             [com.google.code.gson/gson]
+                             [com.google.protobuf/protobuf-java]
+                             [org.apache.yetus/audience-annotations]
+                             [org.slf4j/slf4j-api]
+                             [commons-logging]]]
+               [org.apache.spark/spark-catalyst_2.12 "3.5.1"
+                :exclusions [[com.google.code.findbugs/jsr305]
+                             [com.google.code.gson/gson]
+                             [com.google.protobuf/protobuf-java]
+                             [org.slf4j/slf4j-api]]]]}
              :clojure-1.6
              {:dependencies [[org.clojure/clojure "1.6.0"]]}
              :clojure-1.7
@@ -57,7 +81,13 @@
           :output-dir "doc/codox"
           :src-dir-uri "http://github.com/yieldbot/flambo/blob/develop/"
           :src-linenum-anchor-prefix "L"}
-  :javac-options ["-source" "1.8" "-target" "1.8"]
-  :jvm-opts ^:replace ["-server" "-Xmx2g"]
+  :jvm-opts ["-server" "-Xmx2g"
+             "-Duser.language=en"
+             "--add-opens=java.base/java.io=ALL-UNNAMED"
+             "--add-opens=java.base/java.nio=ALL-UNNAMED"
+             "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED"
+             "--add-opens=java.base/java.util=ALL-UNNAMED"
+             "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED"
+             "--add-opens=java.base/sun.util.calendar=ALL-UNNAMED"]
   :global-vars {*warn-on-reflection* false}
   :min-lein-version "2.5.0")

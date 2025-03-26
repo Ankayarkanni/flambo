@@ -9,7 +9,7 @@ import scala.Tuple3;
 import com.twitter.chill.Tuple2Serializer;
 import com.twitter.chill.Tuple3Serializer;
 import org.apache.spark.broadcast.Broadcast;
-import org.apache.spark.Accumulator;
+import org.apache.spark.util.AccumulatorV2;
 
 public class BaseFlamboRegistrator implements KryoRegistrator {
 
@@ -23,7 +23,7 @@ public class BaseFlamboRegistrator implements KryoRegistrator {
       kryo.register(Tuple2.class, new Tuple2Serializer());
       kryo.register(Tuple3.class, new Tuple3Serializer());
       kryo.register(Broadcast.class, new JavaSerializer());
-      kryo.register(Accumulator.class, new JavaSerializer());
+      kryo.register(AccumulatorV2.class, new JavaSerializer());
 
       register(kryo);
 
